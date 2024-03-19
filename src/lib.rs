@@ -1,14 +1,15 @@
-pub fn add(left: usize, right: usize) -> usize {
-    left + right
-}
+mod dynamic_log;
+
+pub use dynamic_log::DynamicLog;
 
 #[cfg(test)]
 mod tests {
-    use super::*;
+    use crate::dynamic_log::DynamicLog;
 
     #[test]
     fn it_works() {
-        let result = add(2, 2);
-        assert_eq!(result, 4);
+        let mut log = DynamicLog::new();
+        log.push_chunk(Some("chunk1".to_string()));
+        log.push_line("Hello, world!".to_string(), true);
     }
 }
