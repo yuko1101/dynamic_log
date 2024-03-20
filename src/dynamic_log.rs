@@ -2,7 +2,7 @@ use std::io::{stdout, Stdout, Write};
 
 pub struct DynamicLog {
     stdout: Stdout,
-    output_chunks: Vec<OutputChunk>,
+    chunks: Vec<LogChunk>,
     pub rendered: bool,
     last_rendered_line_count: usize,
 }
@@ -11,7 +11,7 @@ impl DynamicLog {
     pub fn new() -> DynamicLog {
         DynamicLog {
             stdout: stdout(),
-            output_chunks: vec![],
+            chunks: vec![],
             rendered: false,
             last_rendered_line_count: 0,
         }
@@ -44,15 +44,15 @@ impl DynamicLog {
         self.last_rendered_line_count = 0;
     }
 
-    pub fn push_chunk(&mut self, id: Option<String>) -> &mut OutputChunk {
-        let chunk = OutputChunk::new(id);
-        self.output_chunks.push(chunk);
+    pub fn push_chunk(&mut self, id: Option<String>) -> &mut LogChunk {
+        let chunk = LogChunk::new(id);
+        self.chunks.push(chunk);
 
-        self.output_chunks.last_mut().unwrap()
+        self.chunks.last_mut().unwrap()
     }
 
     pub fn push_line(&mut self, line: String, render: bool) {
-        let last_chunk = self.output_chunks.last_mut();
+        let last_chunk = self.chunks.last_mut();
         if last_chunk.is_none() {
             panic!("No chunk to push line to");
         }
@@ -73,8 +73,8 @@ impl DynamicLog {
         }
     }
 
-    pub fn pop_chunk(&mut self, render: bool) -> Option<OutputChunk> {
-        let popped = self.output_chunks.pop();
+    pub fn pop_chunk(&mut self, render: bool) -> Option<LogChunk> {
+        let popped = self.chunks.pop();
 
         if render && self.rendered {
             self.render();
@@ -84,7 +84,7 @@ impl DynamicLog {
     }
 
     pub fn pop_line(&mut self, render: bool) -> Option<String> {
-        let last_chunk = self.output_chunks.last_mut();
+        let last_chunk = self.chunks.last_mut();
         if last_chunk.is_none() {
             return None;
         }
@@ -97,23 +97,23 @@ impl DynamicLog {
         popped
     }
 
-    pub fn get_chunk(&mut self, id: &str) -> &mut OutputChunk {
-        self.output_chunks
+    pub fn get_chunk(&mut self, id: &str) -> &mut LogChunk {
+        self.chunks
             .iter_mut()
             .find(|c| c.id.to_owned().is_some_and(|s| s == id))
             .expect("Could not find the chunk")
     }
 
-    pub fn get_chunk_by_index(&mut self, index: i32) -> &mut OutputChunk {
+    pub fn get_chunk_by_index(&mut self, index: i32) -> &mut LogChunk {
         if index < 0 {
-            let len = self.output_chunks.len();
-            return &mut self.output_chunks[(len as i32 + index) as usize];
+            let len = self.chunks.len();
+            return &mut self.chunks[(len as i32 + index) as usize];
         }
-        &mut self.output_chunks[index as usize]
+        &mut self.chunks[index as usize]
     }
 
     pub fn get_lines(&self) -> Vec<String> {
-        self.output_chunks
+        self.chunks
             .iter()
             .map(|c| c.lines.clone())
             .collect::<Vec<Vec<String>>>()
@@ -121,14 +121,14 @@ impl DynamicLog {
     }
 }
 
-pub struct OutputChunk {
+pub struct LogChunk {
     pub lines: Vec<String>,
     pub id: Option<String>,
 }
 
-impl OutputChunk {
-    pub fn new(id: Option<String>) -> OutputChunk {
-        OutputChunk { lines: vec![], id }
+impl LogChunk {
+    pub fn new(id: Option<String>) -> LogChunk {
+        LogChunk { lines: vec![], id }
     }
 
     pub fn push_line(&mut self, line: String) {
